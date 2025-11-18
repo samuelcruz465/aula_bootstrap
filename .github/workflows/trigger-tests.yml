@@ -1,0 +1,20 @@
+name: Trigger Tests in Project A
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger external workflow
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PIPE_SECRET }}" \
+            https://api.github.com/repos/samuelcruz465/pw-pipeline/dispatches \
+            -d '{"event_type": "run-tests"}'
