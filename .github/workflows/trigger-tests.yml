@@ -1,20 +1,47 @@
-name: Trigger Tests in Project A
+name: Trigger and Wait for pw-pipeline Tests
 
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
 
 jobs:
-  trigger:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trigger external workflow
+      - name: Trigger tests in pw-pipeline
+        id: trigger
         run: |
           curl -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.PIPE_SECRET }}" \
-            https://api.github.com/repos/samuelcruz465/pw-pipeline/dispatches \
-            -d '{"event_type": "run-tests"}'
+            -H "Authorization: Bearer ${{ secrets.PW_PIPELINE_TOKEN }}" \
+            https://api.github.com/repos/samuelcruz465/pw-pipeline/actions/workflows/run-tests.yml/dispatches \
+            -d '{"ref":"main"}'
+
+      - name: Wait for pw-pipeline workflow to complete
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PW_PIPELINE_TOKEN }}
+          script: |
+            const owner = "samuelcruz465";
+            const repo = "pw-pipeline";
+
+            // Poll for workflow runs from this dispatch
+            while (true) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: "run-tests.yml",
+                per_page: 1
+              });
+
+              const run = runs.data.workflow_runs[0];
+              if (run && run.status === "completed") {
+                if (run.conclusion !== "success") {
+                  core.setFailed("Playwright tests failed in pw-pipeline.");
+                }
+                break;
+              }
+
+              await new Promise(r => setTimeout(r, 5000));
+            }
