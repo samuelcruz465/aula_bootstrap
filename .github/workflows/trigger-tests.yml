@@ -21,7 +21,7 @@ jobs:
       - name: Wait for pw-pipeline workflow to complete
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.PIPE-AB }}
+          github-token: ${{ secrets.PIPE }}
           script: |
             const owner = "samuelcruz465";
             const repo = "pw-pipeline";
