@@ -2,7 +2,7 @@ name: Trigger and Wait for Playwright Tests (Repo A)
 
 on:
   push:
-    branches: ["main"]
+    branches: ["test-pipe"]
   pull_request:
     branches: ["main"]
 
